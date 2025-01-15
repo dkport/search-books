@@ -12,6 +12,17 @@ import httpx
 from data_models import Book, ResponseWithBooks
 
 
+class NumberRetriever:
+    def __init__(self, data):
+        self.data = data
+
+    def number(self, key, is_float=False):
+        res = self.data.get(key, "")
+        if is_float and res:
+            res = str(round(res, 2))
+        return str(res)
+
+
 class FetchBookData:
     """
     Fetches book information and ratings from Open Library using the
@@ -31,47 +42,43 @@ class FetchBookData:
         """
         base_url = "https://openlibrary.org/search.json"
         results = {}
-
         try:
             for isbn in isbn_list:
                 # Query the search endpoint for the specific ISBN
                 params = {"isbn": isbn}
+                try:
+                    response = httpx.get(base_url, params=params, timeout=5.0)
+                except Exception as e:
+                    print(f"An error occurred: {e}")
 
-                response = httpx.get(base_url, params=params, timeout=8.0)
-                response.raise_for_status()
-                data = response.json()
+                data = {}
+                if response.status_code == 200:
+                    data = response.json()
+                if not data:
+                    data = {"docs": []}
 
                 if data.get("docs"):
                     # Use the first match as the result
                     book_info = data["docs"][0]
-
-                    average = book_info.get("ratings_average", "")
-                    if average:
-                        average = round(average, 2)
-
+                    get = NumberRetriever(book_info)
                     results[isbn] = {                    
-                        "title": book_info.get("title", "N/A"),
-                        "author_name": book_info.get("author_name", "")[0],
-                        "ratings_average": str(average),
-                        "ratings_count": str(book_info.get("ratings_count", "")),
-                        "number_of_pages_median": str(book_info.get("number_of_pages_median", "")),
-                        "first_publish_year": str(book_info.get("first_publish_year", "")),
-                        "ratings_average": str(book_info.get("ratings_average", "")),
-                        "ratings_count": str(book_info.get("ratings_count", "")),
-                        "ratings_count_1": str(book_info.get("ratings_count_1", "")),
-                        "ratings_count_2": str(book_info.get("ratings_count_2", "")),
-                        "ratings_count_3": str(book_info.get("ratings_count_3", "")),
-                        "ratings_count_4": str(book_info.get("ratings_count_4", "")),
-                        "ratings_count_5": str(book_info.get("ratings_count_5", ""))      
+                        "ratings_average": get.number("ratings_average", True),
+                        "ratings_count": get.number("ratings_count"),
+                        "number_of_pages_median": get.number("number_of_pages_median"),
+                        "first_publish_year": get.number("first_publish_year"),
+                        "ratings_average": get.number("ratings_average"),
+                        "ratings_count": get.number("ratings_count"),
+                        "ratings_count_1": get.number("ratings_count_1"),
+                        "ratings_count_2": get.number("ratings_count_2"),
+                        "ratings_count_3": get.number("ratings_count_3"),
+                        "ratings_count_4": get.number("ratings_count_4"),
+                        "ratings_count_5": get.number("ratings_count_5")      
                     } 
 
-        except httpx.RequestError as e:
-            print(f"An error occurred while making the request: {e}")
-        except httpx.HTTPStatusError as e:
-            print(f"HTTP error occurred: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
         return results
-
 
 class BookSearchApp:
     """
@@ -114,6 +121,8 @@ class BookSearchApp:
         for book in self.response_with_books.books:
             if book.isbn and book.isbn in all_book_data:
                 res = all_book_data[book.isbn]
+                res["title"] = book.title
+                res["author_name"] = book.author_name
                 res["brief_description"] = book.brief_description
                 res["isbn"] = book.isbn
 

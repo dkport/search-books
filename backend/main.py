@@ -7,8 +7,7 @@ and extended book data using OpenAI's GPT-based language model and the Open Libr
 
 import httpx
 import json
-import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from types import SimpleNamespace
 from typing import Union
@@ -92,6 +91,7 @@ async def search_books(request: QueryRequest):
     Raises:
         HTTPException: If an unexpected error occurs during the request processing.
     """
+
     # 1) Profanity check
     if profanity.contains_profanity(request.query):
         return ResponseProfanityFound(
@@ -122,20 +122,12 @@ async def search_books(request: QueryRequest):
             # 4) Call the async method that fetches data concurrently
             result = await book_app.search_books()
             return result
-
-        except httpx.HTTPError as http_error:
+        except:
             return response_with_books
-        except Exception as e:
-            logging.error("Error during book search: %s", str(e))
-            raise HTTPException(
-                status_code=500,
-                detail="An unexpected error occurred while processing the request."
-            )
 
     # 5) If ChatGPT returned a JSON with "no_matches_found"
     if parsed.is_json and "no_matches_found" in parsed.data:
         return ResponseNoMatchesFound(**parsed.data)
-    
     return response_with_books
 
 
