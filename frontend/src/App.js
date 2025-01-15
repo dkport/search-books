@@ -30,10 +30,17 @@ function App() {
 
     try {
       const response = await axios.post(
-           'http://127.0.0.1:8000/search-books', {
-        session_id: sessionId,
-        query: input,
-      });
+        'http://127.0.0.1:8000/search-books', {
+          session_id: sessionId,
+          query: input,
+        },
+        {
+          timeout: 150000,
+          headers: {
+            'Content-Type': 'application/json', // Ensure proper headers
+          },
+        }
+      );
 
       const reply = response.data;
       console.log(reply);

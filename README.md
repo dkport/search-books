@@ -33,6 +33,6 @@ If you need to build without using the cache, you can use the following commands
 
 ```bash
 docker compose build --no-cache
-docker compose --env-file .env up -d
+docker compose --env-file env up -d
 ```
 
