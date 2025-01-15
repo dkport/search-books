@@ -23,7 +23,7 @@ from data_models import (
     Book,
     ResponseWithBooks
 )
-from open_library import BookSearchApp #, OpenLibraryService
+from open_library import BookSearchApp
 
 
 def parse_response(input_string):

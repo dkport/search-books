@@ -46,16 +46,29 @@ class FetchBookData:
             for isbn in isbn_list:
                 # Query the search endpoint for the specific ISBN
                 params = {"isbn": isbn}
-                try:
-                    response = httpx.get(base_url, params=params, timeout=5.0)
-                except Exception as e:
-                    print(f"An error occurred: {e}")
+
+                retrieved = False
+
+                for _ in range(2):
+                    # Trying to get the info up to 2 times
+                    try:
+                        response = httpx.get(base_url, params=params, timeout=5.0)
+                        if response.status_code == 200:
+                            retrieved = True
+                            break
+                    except Exception as e:
+                        print(f"An error occurred while requesting a data "
+                              f"from OpenLibrary API: {e}f")
 
                 data = {}
-                if response.status_code == 200:
-                    data = response.json()
+                if retrieved:
+                    if response.status_code == 200:
+                        data = response.json()
                 if not data:
-                    data = {"docs": []}
+                    # response.json() can sometimes return an empty json
+                    # for some book
+                    data = {"docs": [{}]}
+
 
                 if data.get("docs"):
                     # Use the first match as the result
