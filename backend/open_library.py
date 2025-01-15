@@ -19,7 +19,10 @@ class NumberRetriever:
     def number(self, key, is_float=False):
         res = self.data.get(key, "")
         if is_float and res:
-            res = str(round(res, 2))
+            try:
+                res = str(round(float(res), 2))
+            except:
+                pass
         return str(res)
 
 
@@ -60,33 +63,29 @@ class FetchBookData:
                         print(f"An error occurred while requesting a data "
                               f"from OpenLibrary API: {e}f")
 
-                data = {}
+                book_info = {}
                 if retrieved:
                     if response.status_code == 200:
-                        data = response.json()
-                if not data:
-                    # response.json() can sometimes return an empty json
-                    # for some book
-                    data = {"docs": [{}]}
+                        book_info = response.json()
 
+                        if "docs" in book_info and book_info["docs"]:
+                            book_info = book_info["docs"][0]
+                if not book_info:
+                    book_info = {}
 
-                if data.get("docs"):
-                    # Use the first match as the result
-                    book_info = data["docs"][0]
-                    get = NumberRetriever(book_info)
-                    results[isbn] = {                    
-                        "ratings_average": get.number("ratings_average", True),
-                        "ratings_count": get.number("ratings_count"),
-                        "number_of_pages_median": get.number("number_of_pages_median"),
-                        "first_publish_year": get.number("first_publish_year"),
-                        "ratings_average": get.number("ratings_average"),
-                        "ratings_count": get.number("ratings_count"),
-                        "ratings_count_1": get.number("ratings_count_1"),
-                        "ratings_count_2": get.number("ratings_count_2"),
-                        "ratings_count_3": get.number("ratings_count_3"),
-                        "ratings_count_4": get.number("ratings_count_4"),
-                        "ratings_count_5": get.number("ratings_count_5")      
-                    } 
+                get = NumberRetriever(book_info)
+                results[isbn] = {
+                    "ratings_average": get.number("ratings_average", True),
+                    "ratings_count": get.number("ratings_count"),
+                    "number_of_pages_median": get.number("number_of_pages_median"),
+                    "first_publish_year": get.number("first_publish_year"),
+                    "ratings_count": get.number("ratings_count"),
+                    "ratings_count_1": get.number("ratings_count_1"),
+                    "ratings_count_2": get.number("ratings_count_2"),
+                    "ratings_count_3": get.number("ratings_count_3"),
+                    "ratings_count_4": get.number("ratings_count_4"),
+                    "ratings_count_5": get.number("ratings_count_5")
+                }
 
         except Exception as e:
             print(f"An error occurred in run method: {e}")
