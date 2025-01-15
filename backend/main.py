@@ -5,7 +5,7 @@ This module implements a FastAPI-based backend service for querying book recomme
 and extended book data using OpenAI's GPT-based language model and the Open Library API.
 """
 
-import httpx
+
 import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -82,11 +82,10 @@ async def search_books(request: QueryRequest):
         request (QueryRequest): The user's search query and session information.
 
     Returns:
-        Union[ResponseWithBooks, ResponseNoMatchesFound, ResponseProfanityFound, IssueWithOpenLibraryAPI]:
+        Union[ResponseWithBooks, ResponseNoMatchesFound, ResponseProfanityFound]:
             - ResponseWithBooks: A response containing a list of recommended books and further assistance.
             - ResponseNoMatchesFound: A response indicating no matches were found for the query.
             - ResponseProfanityFound: A response indicating that profanity was detected in the query.
-            - IssueWithOpenLibraryAPI: A response indicating an issue occurred while interacting with the OpenLibrary API.
 
     Raises:
         HTTPException: If an unexpected error occurs during the request processing.
