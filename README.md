@@ -2,7 +2,7 @@
 
 ## Environment Variables
 
-Set the following environment variables in a `.env` file:
+Set the following environment variables in a `env` file:
 
 ```env
 # Please set your OPENAI_API_KEY here:
@@ -16,7 +16,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 Run the following command to start the project:
 
 ```bash
-docker compose --env-file .env up -d
+docker compose --env-file env up -d
 ```
 
 ### To Stop the Project
@@ -24,7 +24,7 @@ docker compose --env-file .env up -d
 Run the following command to stop the project:
 
 ```bash
-docker compose --env-file .env down
+docker compose --env-file env down
 ```
 
 ### To Build Without Cache
