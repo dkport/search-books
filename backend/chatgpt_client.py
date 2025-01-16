@@ -134,7 +134,9 @@ class ChatGPTClient:
         response = await aclient.chat.completions.create(
             model="gpt-4o",
             messages=self.user_sessions[session_id],
-            temperature=1)
+            temperature=0.1,
+            #stream=True  # Enable streaming
+        )
 
         # 3) Remove the last augmented message
         self.user_sessions[session_id].pop()

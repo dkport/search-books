@@ -7,16 +7,17 @@ in conjunction with a book recommendation system, adding detailed information
 to books recommended by another service (e.g., ChatGPT).
 """
 
-import httpx
-
 from data_models import Book, ResponseWithBooks
-
+from retrieve_concurrent import RetrieveConcurrent
 
 class NumberRetriever:
+    """A class for retrieving and formatting numerical values"""
+
     def __init__(self, data):
         self.data = data
 
     def number(self, key, is_float=False):
+        """Retrieves a numerical value from the data dictionary"""
         res = self.data.get(key, "")
         if is_float and res:
             try:
@@ -32,8 +33,12 @@ class FetchBookData:
     search.json endpoint
     """
 
-    @staticmethod
-    def run(isbn_list):
+    FIELDS = [
+        "ratings_count", "number_of_pages_median", "first_publish_year",
+        "ratings_count", "ratings_count_1", "ratings_count_2",
+        "ratings_count_3", "ratings_count_4", "ratings_count_5"]
+
+    def run(self, isbn_list):
         """
         Fetches book information.
 
@@ -41,33 +46,19 @@ class FetchBookData:
             isbn_list (list of str): A list of ISBNs to query.
 
         Returns:
-            dict: A dictionary containing information about each book indexed by ISBN, including ratings.
+            dict: A dictionary containing information about each book indexed
+            by ISBN, including ratings.
         """
-        base_url = "https://openlibrary.org/search.json"
-        results = {}
+
         try:
-            for isbn in isbn_list:
-                # Query the search endpoint for the specific ISBN
-                params = {"isbn": isbn}
+            retriever = RetrieveConcurrent()
+            results = retriever.retrieve_bunch(isbn_list)
 
-                retrieved = False
-
-                for _ in range(2):
-                    # Trying to get the info up to 2 times
-                    try:
-                        response = httpx.get(base_url, params=params, timeout=5.0)
-                        if response.status_code == 200:
-                            retrieved = True
-                            break
-                    except Exception as e:
-                        print(f"An error occurred while requesting a data "
-                              f"from OpenLibrary API: {e}f")
-
+            for isbn, data in results.items():
                 book_info = {}
-                if retrieved:
-                    if response.status_code == 200:
-                        book_info = response.json()
-
+                if data[0]:
+                    if data[1].status_code == 200:
+                        book_info = data[1].json()
                         if "docs" in book_info and book_info["docs"]:
                             book_info = book_info["docs"][0]
                 if not book_info:
@@ -75,30 +66,28 @@ class FetchBookData:
 
                 get = NumberRetriever(book_info)
                 results[isbn] = {
-                    "ratings_average": get.number("ratings_average", True),
-                    "ratings_count": get.number("ratings_count"),
-                    "number_of_pages_median": get.number("number_of_pages_median"),
-                    "first_publish_year": get.number("first_publish_year"),
-                    "ratings_count": get.number("ratings_count"),
-                    "ratings_count_1": get.number("ratings_count_1"),
-                    "ratings_count_2": get.number("ratings_count_2"),
-                    "ratings_count_3": get.number("ratings_count_3"),
-                    "ratings_count_4": get.number("ratings_count_4"),
-                    "ratings_count_5": get.number("ratings_count_5")
+                    "ratings_average": get.number("ratings_average", True)
                 }
+
+                for field in self.FIELDS:
+                    results[isbn][field] = get.number(field)
 
         except Exception as e:
             print(f"An error occurred in run method: {e}")
 
         return results
 
+
 class BookSearchApp:
     """
-    Application to perform book searches and enrich results using the Open Library API.
+    Application to perform book searches and enrich results using the
+    Open Library API.
 
     Attributes:
-        service (OpenLibraryService): The service used to interact with the Open Library API.
-        response_with_books (ResponseWithBooks): The initial response containing books to be enriched.
+        service (OpenLibraryService): The service used to interact with
+        the Open Library API.
+        response_with_books (ResponseWithBooks): The initial response
+        containing books to be enriched.
     """
 
     def __init__(self, response_with_books: ResponseWithBooks):
