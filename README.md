@@ -2,7 +2,7 @@
 
 ## Environment Variables
 
-Set the following environment variables in a `env` file:
+Set the following environment variables in a `.env` file:
 
 ```env
 # Please set your OPENAI_API_KEY here:
@@ -10,6 +10,12 @@ OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ## Commands
+
+## Be sure to have MongoDB set up:
+
+```bash
+bash setup/setup_mongodb_rhel.sh 
+```
 
 ### To Start the Project
 

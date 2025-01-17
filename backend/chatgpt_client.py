@@ -18,6 +18,8 @@ aclient = AsyncOpenAI(api_key=api_key)  # Ensure you have: pip install --upgrade
 
 
 from augment_prompt import AugmentPrompt
+from db_operations import DBOperations
+from utils import ParseResponse
 
 
 # --- ChatGPT Client (Asynchronous) ---
@@ -40,73 +42,64 @@ class ChatGPTClient:
         Initialize the ChatGPTClient with an augmentor and a session manager.
         """
         self.augmentor = AugmentPrompt()
+        self.db_operations = DBOperations()
         self.user_sessions = {}
+        self.parser = ParseResponse()
+        self._max_len = 50 * 2  # Last 50 interactions (includes one user
+                                # entry + one corresponding to GPT response)
 
-    def update_correspondence(self, session_id, message, is_user, clean):
+    def update_correspondence(self, session_id, message, is_user, clean=False):
         """
         Update the conversation history for a given session.
 
-        Depending on the `clean` flag, this method either stores the raw user message
-        or an augmented version with additional context.
+        Depending on the `clean` flag, this method either stores the raw user
+        message or an augmented version with additional context.
 
         Args:
             session_id (str): The unique identifier for the user's session.
             message (str): The message content to be stored.
-            is_user (bool): Whether the message is from the user (`True`) or the assistant (`False`).
-            clean (bool): Whether to store the raw message (`True`) or an augmented version (`False`).
+            is_user (bool): Whether the message is from the user (`True`)
+            or the assistant (`False`).
+            clean (bool): Whether to store the raw message (`True`) or an
+            augmented version (`False`).
 
         Notes:
-            - Limits conversation history to the last 5 entries to avoid memory overload.
-            - Augments messages with prior book recommendations if `clean` is `False`.
+            - Limits conversation history to the last 5 entries to avoid
+              memory overload.
+            - Augments messages with prior book recommendations if `clean` is
+              `False`.
         """
-        if session_id not in self.user_sessions:
-            # Initialize a minimal conversation context
-            self.user_sessions[session_id] = [
-                {
-                    "role": "user",
-                    "content": "Provide context for book recommendations."
-                },
-                {
-                    "role": "assistant",
-                    "content": "I'm here to assist with book recommendations. What topic are you interested in?"
-                }
-            ]
 
-        if clean:
-            # Just append the message as-is
-            self.user_sessions[session_id].append(
-                {
-                    "role": "user" if is_user else "assistant",
-                    "content": message
-                }
-            )
-            if len(self.user_sessions[session_id]) >= 5:
-                # Clipping the data - so that the server will not arrive to a
-                # state that it has too much data from a specific client that will
-                # cause it to crash
-                self.user_sessions[session_id] = self.user_sessions[session_id][-5:]
+        if (session_id not in self.user_sessions
+                or not self.user_sessions[session_id]):
+            # Initializing with an empty list
+            self.user_sessions[session_id] = []
+
+        if is_user:
+            if not clean:
+                content = self.augmentor.generate(message)
+            else:
+                content = message
         else:
-            # Optionally augment the prompt with prior "books" data or additional instructions
-            prev = ""
-            n = len(self.user_sessions[session_id]) - 2
-            for index, data in enumerate(self.user_sessions[session_id][2:]):
-                if index == 0:
-                    prev += f"- {index + 1}) (oldest) query:\n"
-                elif index + 1 == n:
-                    prev += f"- {index + 1}) (latest) query:\n"
-                else:
-                    prev += f"- {index + 1}) query:\n"
-                if "books" in data:
-                    for item in data:
-                        prev += f"{item['book']} by {item['author_name']}\n"
+            parsed = self.parser.run(message)
+            content = ""
+            if parsed.is_json:
+                if "books" in parsed.data:
+                    if parsed.data["books"]:
+                        content = "Suggested books are:\n\n"
+                        for book in parsed.data["books"]:
+                            content += (
+                                f"- 'book title': \"{book['title']}\","
+                                f"'author': {book['author_name']}\n")
+                elif "no_matches_found" in parsed.data["no_matches_found"]:
+                    content = parsed["no_matches_found"]
+                elif "profanity_found" in parsed.data:
+                    content = parsed["profanity_found"]
 
-            # Attach your custom instructions via the Prompt Augmentor
-            self.user_sessions[session_id].append(
-                {
-                    "role": "user" if is_user else "assistant",
-                    "content": f"{prev}\n\n{self.augmentor.generate(message)}"
-                }
-            )
+        self.user_sessions[session_id].append({
+            "role": "user" if is_user else "assistant",
+            "content": content
+        })
 
     async def send_prompt(self, session_id, message):
         """
@@ -127,25 +120,39 @@ class ChatGPTClient:
         Raises:
             Exception: If the OpenAI API request fails.
         """
+
+        self.user_sessions[session_id] = self.db_operations.retrieve(
+            session_id)
+        
         # 1) Add augmented message (clean=False)
-        self.update_correspondence(session_id, message, is_user=True, clean=False)
+        self.update_correspondence(
+            session_id, message, is_user=True, clean=False)
 
         # 2) Call ChatCompletion asynchronously
         response = await aclient.chat.completions.create(
             model="gpt-4o",
             messages=self.user_sessions[session_id],
-            temperature=0.1,
-            #stream=True  # Enable streaming
+            temperature=1,
         )
 
         # 3) Remove the last augmented message
         self.user_sessions[session_id].pop()
 
         # 4) Add user message as-is
-        self.update_correspondence(session_id, message, is_user=True, clean=True)
+        self.update_correspondence(
+             session_id, message, is_user=True, clean=True)
 
         # 5) Extract and store assistant's reply
         reply = response.choices[0].message.content
-        self.update_correspondence(session_id, reply, is_user=False, clean=True)
+        self.update_correspondence(
+            session_id, reply, is_user=False)
+        
+        if len(self.user_sessions[session_id]) >= self._max_len:
+            # Cutting the oldest interaction between user and GPT API
+            self.user_sessions[session_id] = self.user_sessions[session_id][2:]
+
+        self.db_operations.upsert(
+            session_id,
+            self.user_sessions[session_id])
 
         return reply

@@ -2,5 +2,6 @@ fastapi[all]
 aiocache
 uvicorn
 gunicorn
-openai
+openai==1.59.3
 better_profanity
+pymongo

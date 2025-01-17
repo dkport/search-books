@@ -24,27 +24,7 @@ from data_models import (
     ResponseWithBooks
 )
 from open_library import BookSearchApp
-
-
-def parse_response(input_string):
-    """
-    Helper to parse JSON or raw text from ChatGPT's response.
-    """
-    result = SimpleNamespace()
-    try:
-        # If it's already a dict, set is_json directly
-        if isinstance(input_string, dict):
-            result.is_json = True
-            result.data = input_string
-        else:
-            # Attempt to parse as JSON
-            result.is_json = True
-            result.data = json.loads(input_string)
-    except ValueError:
-        # Not valid JSON
-        result.is_json = False
-        result.data = input_string
-    return result
+from utils import ParseResponse
 
 
 # Create your FastAPI application
@@ -57,6 +37,8 @@ app.add_middleware(
 )
 
 gpt_client = ChatGPTClient()
+profanity.load_censor_words()
+parser = ParseResponse()
 
 
 @app.post(
@@ -102,7 +84,7 @@ async def search_books(request: QueryRequest):
 
     # 2) Get ChatGPT's response (asynchronously)
     raw_response = await gpt_client.send_prompt(request.session_id, request.query)
-    parsed = parse_response(raw_response)
+    parsed = parser.run(raw_response)
 
     # 3a) If ChatGPT returned a JSON with "books"
     if parsed.is_json and "books" in parsed.data:
@@ -128,7 +110,3 @@ async def search_books(request: QueryRequest):
     if parsed.is_json and "no_matches_found" in parsed.data:
         return ResponseNoMatchesFound(**parsed.data)
     return response_with_books
-
-
-if __name__ == "__main__":
-    profanity.load_censor_words()
