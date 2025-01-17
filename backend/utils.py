@@ -9,7 +9,7 @@ class ParseResponse:
     This class provides a method to determine if the input string is valid JSON
     and parses it accordingly. If the input is not valid JSON, it is treated as raw text.
     """
-    
+
     @staticmethod
     def run(input_string):
         """

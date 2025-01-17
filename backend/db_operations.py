@@ -106,7 +106,7 @@ class Repository:
             }
         }
         result = self.db_client.collection.update_one(query, update, upsert=True)
-        
+
         if result.upserted_id:
             print(f"Document inserted with ID: {result.upserted_id}")
         else:

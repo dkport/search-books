@@ -5,8 +5,6 @@ This module implements a FastAPI-based backend service for querying book recomme
 and extended book data using OpenAI's GPT-based language model and the Open Library API.
 """
 
-import json
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from types import SimpleNamespace

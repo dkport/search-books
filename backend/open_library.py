@@ -10,6 +10,7 @@ to books recommended by another service (e.g., ChatGPT).
 from data_models import Book, ResponseWithBooks
 from retrieve_concurrent import RetrieveConcurrent
 
+
 class NumberRetriever:
     """A class for retrieving and formatting numerical values"""
 

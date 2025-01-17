@@ -123,7 +123,7 @@ class ChatGPTClient:
 
         self.user_sessions[session_id] = self.db_operations.retrieve(
             session_id)
-        
+
         # 1) Add augmented message (clean=False)
         self.update_correspondence(
             session_id, message, is_user=True, clean=False)
@@ -146,7 +146,7 @@ class ChatGPTClient:
         reply = response.choices[0].message.content
         self.update_correspondence(
             session_id, reply, is_user=False)
-        
+
         if len(self.user_sessions[session_id]) >= self._max_len:
             # Cutting the oldest interaction between user and GPT API
             self.user_sessions[session_id] = self.user_sessions[session_id][2:]

@@ -1,9 +1,9 @@
 """
 Prompt Augmentation for Book Search Queries
 
-This module provides utilities to generate detailed and structured prompts for 
-querying a book recommendation system (e.g., ChatGPT). The generated prompts 
-ensure that responses adhere to a specific JSON format, making it easier to 
+This module provides utilities to generate detailed and structured prompts for
+querying a book recommendation system (e.g., ChatGPT). The generated prompts
+ensure that responses adhere to a specific JSON format, making it easier to
 parse and use the results in downstream applications.
 """
 
@@ -13,9 +13,9 @@ class AugmentPrompt:
     """
     A utility class to generate augmented prompts for book search queries.
 
-    This class provides a static method to create a well-structured prompt 
-    for querying a book recommendation system (e.g., ChatGPT). The prompt 
-    ensures that the system returns responses in a specific JSON format 
+    This class provides a static method to create a well-structured prompt
+    for querying a book recommendation system (e.g., ChatGPT). The prompt
+    ensures that the system returns responses in a specific JSON format
     tailored to the needs of the application.
 
     Features:
@@ -30,15 +30,15 @@ class AugmentPrompt:
         """
         Generate an augmented prompt for a book search query.
 
-        This method constructs a detailed prompt that instructs the system 
+        This method constructs a detailed prompt that instructs the system
         to return a JSON-formatted response with specific fields, including:
         - A list of books with their title, author name, and a brief description.
         - A message offering further assistance.
 
         Special Instructions:
-        - If no books match the query, the response should include a 
+        - If no books match the query, the response should include a
           "no_matches_found" field explaining why no recommendations could be made.
-        - The response must not include markdown, triple backticks, or any 
+        - The response must not include markdown, triple backticks, or any
           other non-JSON formatting.
 
         Args:
