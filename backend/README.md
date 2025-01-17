@@ -12,7 +12,7 @@ To run the backend, you can use Docker. Make sure you have Docker installed on y
 2. Ensure that a Docker-compatible application (e.g., Docker Desktop, Docker Engine) is running.
 3. docker build -t book-info-frontend-prod .
 3. Run the following command to start the backend container:
-   
+
    Option 1 (docker):
 
    ```bash
@@ -21,7 +21,7 @@ To run the backend, you can use Docker. Make sure you have Docker installed on y
 
    **Note:** Replace the `OPENAI_API_KEY` value with your actual API key.
 
-  Option 2 (using uvicorn. **Note:** You should install libs from **requirements.txt** in advance):
+   Option 2 (using uvicorn. **Note:** You should install libs from **requirements.txt** in advance):
 
    ```bash
    OPENAI_API_KEY="<your-ChatGPT-API-Key>" uvicorn main:app --host 0.0.0.0 --port 8000 --workers 5

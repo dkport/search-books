@@ -14,7 +14,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 ## Be sure to have MongoDB set up:
 
 ```bash
-bash setup/setup_mongodb_rhel.sh 
+bash setup/setup_mongodb_<Your-OS-goes-here>.sh
 ```
 
 ### To Start the Project
