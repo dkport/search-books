@@ -1,14 +1,14 @@
 """
 Open Library Integration for Book Search Enrichment
 
-This module provides functionality to interact with the Open Library API to 
-enrich book search results with additional metadata. It is designed to work 
-in conjunction with a book recommendation system, adding detailed information 
+This module provides functionality to interact with the Open Library API to
+enrich book search results with additional metadata. It is designed to work
+in conjunction with a book recommendation system, adding detailed information
 to books recommended by another service (e.g., ChatGPT).
 """
 
 from data_models import Book, ResponseWithBooks
-from retrieve_concurrent import RetrieveConcurrent
+from retrieve_async import RetrieveAsync
 
 
 class NumberRetriever:
@@ -39,7 +39,7 @@ class FetchBookData:
         "ratings_count", "ratings_count_1", "ratings_count_2",
         "ratings_count_3", "ratings_count_4", "ratings_count_5"]
 
-    def run(self, isbn_list):
+    async def run(self, isbn_list):
         """
         Fetches book information.
 
@@ -52,8 +52,8 @@ class FetchBookData:
         """
 
         try:
-            retriever = RetrieveConcurrent()
-            results = retriever.retrieve_bunch(isbn_list)
+            retriever = RetrieveAsync()
+            results = await retriever.retrieve_bunch(isbn_list)
 
             for isbn, data in results.items():
                 book_info = {}
@@ -97,9 +97,9 @@ class BookSearchApp:
 
         Args:
             service (OpenLibraryService): An instance of OpenLibraryService.
-            response_with_books (ResponseWithBooks): The initial response with books to be enriched.
+            response_with_books (ResponseWithBooks): The initial response with
+            books to be enriched.
         """
-        # self.service = service
         self.response_with_books = response_with_books
 
     async def search_books(self) -> ResponseWithBooks:
@@ -109,7 +109,8 @@ class BookSearchApp:
         Uses asyncio.gather to fetch metadata for all books concurrently.
 
         Returns:
-            ResponseWithBooks: An updated response containing enriched book data.
+            ResponseWithBooks: An updated response containing enriched book
+                               data.
         """
         isbn_list = []
 
@@ -117,7 +118,7 @@ class BookSearchApp:
             if book.isbn:
                 isbn_list.append(book.isbn)
         fetch_book_data = FetchBookData()
-        all_book_data = fetch_book_data.run(isbn_list)
+        all_book_data = await fetch_book_data.run(isbn_list)
 
         result = []
         for book in self.response_with_books.books:

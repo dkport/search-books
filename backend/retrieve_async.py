@@ -1,15 +1,16 @@
 """
-This module provides functionality for concurrent retrieval of data from an API.
-It includes a class, `RetrieveConcurrent`, which uses threading to efficiently fetch
-data for multiple items, such as book ISBNs, from an external source.
+This module provides functionality for async retrieval of data from an API.
+It includes a class, `RetrieveAsync`, which uses async communication to
+efficiently fetch data for multiple items, such as book ISBNs, from an
+external API.
 """
 
+import asyncio
 import httpx
 import time
-from concurrent.futures import ThreadPoolExecutor
 
 
-class RetrieveConcurrent:
+class RetrieveAsync:
     """
     A class to retrieve data concurrently using HTTP requests.
 
@@ -28,19 +29,22 @@ class RetrieveConcurrent:
         """
         self.results = {}
 
-    def retrieve_data(self, isbn):
+    async def retrieve_data(self, isbn):
         """
         Fetches data for a single item (e.g., ISBN) from the external API.
 
         Args:
-            isbn (str): The identifier for the item to retrieve, such as an ISBN number.
+            isbn (str): The identifier for the item to retrieve, such as an
+                        ISBN number.
 
         Side Effects:
-            Updates the `results` dictionary with the retrieval status and response.
+            Updates the `results` dictionary with the retrieval status and
+            response.
 
         Notes:
             - The method uses the `httpx` library to send GET requests.
-            - If an exception occurs during the request, it logs the error and sets the retrieval status to False.
+            - If an exception occurs during the request, it logs the error
+              and sets the retrieval status to False.
         """
         base_url = "https://openlibrary.org/search.json"
         params = {"isbn": isbn}
@@ -52,29 +56,24 @@ class RetrieveConcurrent:
             print(f"Failed to retrieve. Error: {e}")
         self.results[isbn] = [retrieved, response]
 
-    def retrieve_bunch(self, isbn_list, max_threads=20):
+    async def retrieve_bunch(self, isbn_list):
         """
         Fetches data for a list of items concurrently.
 
         Args:
-            isbn_list (list of str): A list of item identifiers (e.g., ISBNs) to retrieve.
-            max_threads (int, optional): The maximum number of threads to use for concurrent execution.
-                                         Defaults to 15.
+            isbn_list (list of str): A list of item identifiers (e.g., ISBNs)
+            to retrieve.
 
         Returns:
-            dict: A dictionary containing the retrieval status and responses for all requested items.
+            dict: A dictionary containing the retrieval status and responses
+                  for all requested items.
 
         Side Effects:
             Prints the total elapsed time for retrieving data.
-
-        Notes:
-            - Uses `ThreadPoolExecutor` for multithreaded execution.
-            - The `retrieve_data` method is called for each item in the list.
         """
         start_time = time.time()
-        with ThreadPoolExecutor(min(len(isbn_list), max_threads)) as executor:
-            for isbn in isbn_list:
-                executor.submit(self.retrieve_data, isbn)
+        tasks = [self.retrieve_data(isbn) for isbn in isbn_list]
+        await asyncio.gather(*tasks)
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(elapsed_time)

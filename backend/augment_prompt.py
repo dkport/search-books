@@ -32,12 +32,14 @@ class AugmentPrompt:
 
         This method constructs a detailed prompt that instructs the system
         to return a JSON-formatted response with specific fields, including:
-        - A list of books with their title, author name, and a brief description.
+        - A list of books with their title, author name, and a brief
+          description.
         - A message offering further assistance.
 
         Special Instructions:
         - If no books match the query, the response should include a
-          "no_matches_found" field explaining why no recommendations could be made.
+          "no_matches_found" field explaining why no recommendations could be
+          made.
         - The response must not include markdown, triple backticks, or any
           other non-JSON formatting.
 
@@ -45,7 +47,8 @@ class AugmentPrompt:
             prompt (str): The user's book search query.
 
         Returns:
-            str: A detailed prompt string tailored for the book recommendation system.
+            str: A detailed prompt string tailored for the book recommendation
+                 system.
         """
 
         return f"""
