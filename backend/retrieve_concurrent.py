@@ -72,8 +72,7 @@ class RetrieveConcurrent:
             - The `retrieve_data` method is called for each item in the list.
         """
         start_time = time.time()
-        thread_number = min(len(isbn_list), max_threads)
-        with ThreadPoolExecutor(thread_number) as executor:
+        with ThreadPoolExecutor(min(len(isbn_list), max_threads)) as executor:
             for isbn in isbn_list:
                 executor.submit(self.retrieve_data, isbn)
         end_time = time.time()
