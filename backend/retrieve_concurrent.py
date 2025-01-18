@@ -41,7 +41,7 @@ class RetrieveConcurrent:
         Notes:
             - The method uses the `httpx` library to send GET requests.
             - If an exception occurs during the request, it logs the error and sets the retrieval status to False.
-        """        
+        """
         base_url = "https://openlibrary.org/search.json"
         params = {"isbn": isbn}
         retrieved = False
@@ -70,10 +70,10 @@ class RetrieveConcurrent:
         Notes:
             - Uses `ThreadPoolExecutor` for multithreaded execution.
             - The `retrieve_data` method is called for each item in the list.
-        """        
+        """
         start_time = time.time()
-        threads = min(len(isbn_list), max_threads)
-        with ThreadPoolExecutor(max_threads) as executor:
+        thread_number = min(len(isbn_list), max_threads)
+        with ThreadPoolExecutor(thread_number) as executor:
             for isbn in isbn_list:
                 executor.submit(self.retrieve_data, isbn)
         end_time = time.time()
