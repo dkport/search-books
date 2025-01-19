@@ -9,7 +9,7 @@
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-2. After this rename `env` to `.env`.
+2. Rename `env` to `.env`.
 
 ## Commands
 
