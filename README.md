@@ -2,7 +2,7 @@
 
 ## Environment Variables
 
-1. Set the following environment variables in a `env` file:
+1. Set the following environment variable in a `env` file:
 
 ```env
 # Please set your OPENAI_API_KEY here:
