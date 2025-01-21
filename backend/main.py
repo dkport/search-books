@@ -19,7 +19,8 @@ from data_models import (
     ResponseProfanityFound,
     QueryRequest,
     Book,
-    ResponseWithBooks
+    ResponseWithBooks,
+    ResponseMessage
 )
 from open_library import BookSearchApp
 from utils import ParseResponse
@@ -44,7 +45,8 @@ parser = ParseResponse()
     response_model=Union[
         ResponseWithBooks,
         ResponseNoMatchesFound,
-        ResponseProfanityFound
+        ResponseProfanityFound,
+        ResponseMessage
     ]
 )
 async def search_books(request: QueryRequest):
@@ -87,7 +89,11 @@ async def search_books(request: QueryRequest):
     # 3a) If ChatGPT returned a JSON with "books"
     if parsed.is_json and "books" in parsed.data:
         # Rehydrate into Pydantic Book models
-        books = [Book(**item) for item in parsed.data["books"]]
+        books = []
+        for item in parsed.data["books"]:
+            if ("title" in item and "author_name" in item
+                and "brief_description" in item):
+                books.append(Book(**item))
         response_with_books = ResponseWithBooks(
             books=books,
             further_chat=parsed.data["further_chat"]
@@ -107,4 +113,4 @@ async def search_books(request: QueryRequest):
     # 5) If ChatGPT returned a JSON with "no_matches_found"
     if parsed.is_json and "no_matches_found" in parsed.data:
         return ResponseNoMatchesFound(**parsed.data)
-    return response_with_books
+    return ResponseMessage(message="Please try another query.")

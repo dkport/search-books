@@ -92,3 +92,10 @@ class ResponseWithBooks(BaseModel):
     """
     books: List[Book]
     further_chat: Optional[str] = None
+
+
+class ResponseMessage(BaseModel):
+    """
+    Represents a response with a message.
+    """
+    message: str

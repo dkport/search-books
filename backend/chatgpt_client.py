@@ -88,9 +88,10 @@ class ChatGPTClient:
                     if parsed.data["books"]:
                         content = "Suggested books are:\n\n"
                         for book in parsed.data["books"]:
-                            content += (
-                                f"- 'book title': \"{book['title']}\","
-                                f"'author': {book['author_name']}\n")
+                            if "author_name" in book and "title" in book:
+                                content += (
+                                    f"- 'title': \"{book['title']}\","
+                                    f"'author_name': {book['author_name']}\n")
                 elif "no_matches_found" in parsed.data["no_matches_found"]:
                     content = parsed["no_matches_found"]
                 elif "profanity_found" in parsed.data:

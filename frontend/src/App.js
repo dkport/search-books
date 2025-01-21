@@ -60,6 +60,11 @@ function App() {
           ...prevMessages,
           { sender: 'bot', type: 'info', text: reply.no_matches_found },
         ]);
+      } else if (reply.message) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { sender: 'bot', type: 'info', text: reply.message },
+        ]);
       } else if (reply.issue_reason) {
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -90,21 +95,21 @@ function App() {
         name: error.name,
         ...(error.response && { response: error.response }),
       });
-    
+
       // Optional: Extracting and displaying a more meaningful error message for the user
       const errorMessage =
         error.message || 'An unknown error occurred. Please try again later.';
-    
+
       // Update messages state with detailed context for debugging (for developers) or user-friendly message
       setMessages((prevMessages) => [
         ...prevMessages,
-        { 
-          sender: 'bot', 
-          type: 'text', 
-          text: `An error occurred: ${errorMessage}` 
+        {
+          sender: 'bot',
+          type: 'text',
+          text: `An error occurred: ${errorMessage}`
         },
       ]);
-    
+
       // Optionally add more debugging information for the developer
       if (process.env.NODE_ENV === 'development') {
         setMessages((prevMessages) => [
@@ -120,7 +125,7 @@ function App() {
             }, null, 2)}`,
           },
         ]);
-      }    
+      }
     } finally {
       setIsLoading(false); // Hide the loading animation
     }

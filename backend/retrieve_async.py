@@ -8,6 +8,7 @@ external API.
 import asyncio
 import httpx
 import time
+import traceback
 
 
 class RetrieveAsync:
@@ -49,11 +50,13 @@ class RetrieveAsync:
         base_url = "https://openlibrary.org/search.json"
         params = {"isbn": isbn}
         retrieved = False
-        try:
-            response = httpx.get(base_url, params=params, timeout=5.0)
-            retrieved = True
-        except Exception as e:
-            print(f"Failed to retrieve. Error: {e}")
+        response = None
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(base_url, params=params, timeout=5.0)
+                retrieved = True
+            except Exception as e:
+                print(f"Failed to retrieve {isbn}.")
         self.results[isbn] = [retrieved, response]
 
     async def retrieve_bunch(self, isbn_list):
