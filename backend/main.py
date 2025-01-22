@@ -74,13 +74,13 @@ parser = ParseResponse()
     ]
 )
 @limiter.limit(
-    "2/minute",
-    error_message="The maximum of 2 requests a minute is allowed per 'specific' IP"
+    "5/minute",
+    error_message="The maximum of 5 requests a minute is allowed per 'specific' IP"
 )
 @limiter.limit(
-    "10/minute",
+    "50/minute",
     key_func=lambda request: "global",
-    error_message=("The maximum of 10 requests a minute is allowed 'globally' "
+    error_message=("The maximum of 50 requests a minute is allowed 'globally' "
                    "(for all IPs).")
 )
 async def search_books(
