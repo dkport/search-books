@@ -13,10 +13,10 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ## Commands
 
-### Be sure to have MongoDB set up:
+### If Docker is not installed in your system:
 
 ```bash
-bash setup/setup_mongodb_<Your-OS-goes-here>.sh
+bash setup/<Your-OS-goes-here>.sh
 ```
 
 ### To Start the Project
