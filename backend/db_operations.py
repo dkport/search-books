@@ -5,6 +5,7 @@ This module includes:
 - JsonRepository: Manages saving and retrieving JSON objects using MongoDBClient.
 """
 
+import os
 from datetime import datetime, timezone
 from pymongo import MongoClient, ASCENDING
 
@@ -140,7 +141,8 @@ class DBOperations:
         :param database_name: The name of the MongoDB database.
         :param collection_name: The name of the MongoDB collection.
         """
-        self.connection_string = "mongodb://localhost:27017/"
+        self.connection_string = os.getenv(
+            "MONGO_URI", "mongodb://mongodb:27017/search_books")
         self.database_name = "search_books"
         self.collection_name = "correspondence"
         self.db_client = MongoDBClient(

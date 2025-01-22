@@ -5,3 +5,4 @@ gunicorn==23.0.0
 openai==1.59.3
 better_profanity==0.7.0
 pymongo==4.9.2
+slowapi==0.1.9

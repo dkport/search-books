@@ -28,13 +28,3 @@ while ! docker info >/dev/null 2>&1; do
   sleep 5
   echo "Docker is still starting..."
 done
-
-# Pull MongoDB image
-echo "Pulling MongoDB Docker image..."
-docker pull mongo:latest
-
-# Run MongoDB container
-echo "Starting MongoDB container..."
-docker run --name mongodb -d -p 27017:27017 -v ~/mongodb_data:/data/db mongo:latest
-
-echo "MongoDB is up and running on port 27017."

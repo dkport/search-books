@@ -56,7 +56,7 @@ class RetrieveAsync:
                 response = await client.get(base_url, params=params, timeout=5.0)
                 retrieved = True
             except Exception as e:
-                print(f"Failed to retrieve {isbn}.")
+                print(f"Failed to retrieve. Error: {e}")
         self.results[isbn] = [retrieved, response]
 
     async def retrieve_bunch(self, isbn_list):

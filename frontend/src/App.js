@@ -97,18 +97,24 @@ function App() {
       });
 
       // Optional: Extracting and displaying a more meaningful error message for the user
-      const errorMessage =
+      let errorMessage =
         error.message || 'An unknown error occurred. Please try again later.';
 
-      // Update messages state with detailed context for debugging (for developers) or user-friendly message
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          sender: 'bot',
-          type: 'text',
-          text: `An error occurred: ${errorMessage}`
-        },
-      ]);
+      if (error.response.data.rate_limit_exceeded_message) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { sender: 'bot', type: 'info', text: error.response.data.rate_limit_exceeded_message},
+        ])
+      } else {
+        // Update messages state with detailed context for debugging (for developers) or user-friendly message
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            sender: 'bot',
+            type: 'text',
+            text: `An error occurred: ${errorMessage}`
+          },
+      ])};
 
       // Optionally add more debugging information for the developer
       if (process.env.NODE_ENV === 'development') {
@@ -175,7 +181,7 @@ function App() {
                               src="star.png"
                               alt="Star"
                               style={{ width: "10px", height: "10px" }}
-                            />: 
+                            />:
                             &nbsp;<b>{book[`ratings_count_${rating}`]}</b>
                           </div>
                         ))}

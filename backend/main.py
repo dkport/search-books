@@ -5,9 +5,14 @@ This module implements a FastAPI-based backend service for querying book recomme
 and extended book data using OpenAI's GPT-based language model and the Open Library API.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from types import SimpleNamespace
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+from starlette.responses import PlainTextResponse
 from typing import Union
 
 from better_profanity import profanity
@@ -26,7 +31,10 @@ from open_library import BookSearchApp
 from utils import ParseResponse
 
 
-# Create your FastAPI application
+# Creating a Limiter instance using the remote IP as the key
+limiter = Limiter(key_func=get_remote_address)
+
+# Creating your FastAPI application
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +42,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    detail = exc.detail or "Rate limit exceeded."
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={
+            "rate_limit_exceeded_message": detail
+        }
+    )
+
 
 gpt_client = ChatGPTClient()
 profanity.load_censor_words()
@@ -49,11 +73,24 @@ parser = ParseResponse()
         ResponseMessage
     ]
 )
-async def search_books(request: QueryRequest):
+@limiter.limit(
+    "2/minute",
+    error_message="The maximum of 2 requests a minute is allowed per 'specific' IP"
+)
+@limiter.limit(
+    "10/minute",
+    key_func=lambda request: "global",
+    error_message=("The maximum of 10 requests a minute is allowed 'globally' "
+                   "(for all IPs).")
+)
+async def search_books(
+    request_body: QueryRequest,
+    request: Request  # Added for SlowAPI
+):
     """
     Book search API endpoint.
 
-    This endpoint processes user book search queries and provides appropriate responses based on the query. 
+    This endpoint processes user book search queries and provides appropriate responses based on the query.
     It performs the following steps:
         1. Checks for profanity in the query.
         2. Uses ChatGPT to generate a list of book recommendations.
@@ -61,7 +98,8 @@ async def search_books(request: QueryRequest):
         4. Returns a structured response.
 
     Args:
-        request (QueryRequest): The user's search query and session information.
+        request_body (QueryRequest): The user's search query and session information.
+        request (Request):  Added for SlowAPI.
 
     Returns:
         Union[ResponseWithBooks, ResponseNoMatchesFound, ResponseProfanityFound]:
@@ -74,7 +112,7 @@ async def search_books(request: QueryRequest):
     """
 
     # 1) Profanity check
-    if profanity.contains_profanity(request.query):
+    if profanity.contains_profanity(request_body.query):
         return ResponseProfanityFound(
             profanity_found=(
                 "Please note that this Book Search service is moderated "
@@ -83,7 +121,8 @@ async def search_books(request: QueryRequest):
         )
 
     # 2) Get ChatGPT's response (asynchronously)
-    raw_response = await gpt_client.send_prompt(request.session_id, request.query)
+    raw_response = await gpt_client.send_prompt(
+        request_body.session_id, request_body.query)
     parsed = parser.run(raw_response)
 
     # 3a) If ChatGPT returned a JSON with "books"

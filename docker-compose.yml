@@ -1,4 +1,13 @@
 services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb_search_books
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   backend:
     build:
       context: ./backend
@@ -10,6 +19,9 @@ services:
     volumes:
       - ./backend:/usr/src/app
     restart: always
+    environment:
+      # Pass in the MongoDB URI that uses service name "mongodb"
+      MONGO_URI: mongodb://mongodb:27017/search_books
 
   frontend:
     build:
@@ -23,3 +35,5 @@ services:
       - ./frontend:/usr/src/app
     restart: always
 
+volumes:
+  mongo_data:
